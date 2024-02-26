@@ -1,0 +1,134 @@
+
+% VLDB template version of 2020-08-03 enhances the ACM template, version 1.7.0:
+% https://www.acm.org/publications/proceedings-template
+% The ACM Latex guide provides further information about the ACM template
+
+\documentclass[sigconf, nonacm]{acmart}
+\input{params.inc}
+
+
+\begin{document}
+\title{RepEng Project: A Replication Package for JSONSchemaDiscovery}
+
+%%
+%% The "author" command and its associated commands are used to define the authors and their affiliations.
+
+\author{Qiang Tang}
+\affiliation{%
+	\institution{University of Passau}
+	\city{Passau}
+	\country{Germany}
+}
+\email{tang08@ads.uni-passau.de}
+
+\maketitle
+
+%%% do not modify the following VLDB block %%
+%%% VLDB block start %%%
+\ifdefempty{\vldbavailabilityurl}{}{
+	\vspace{.3cm}
+	\begingroup\small\noindent\raggedright\textbf{Artifact Availability:}\\
+	The source code, data, and/or other artifacts have been made available at \url{https://github.com/tlab-unip/ReproEng_JSONSchemaDiscovery}.
+	\endgroup
+}
+%%% VLDB block end %%%
+
+\section{Introduction}
+
+In 2018, JSONSchemaDiscovery\cite{jsonschema} introduced a method for extracting schemas from JSON or extended JSON documents stored in a NoSQL document-oriented database or other document repository.
+
+Undoubtedly, this research has provided us an excellent tool for JSON Schema extraction. Nevertheless, due to limitations in previous scientific tools, the structure of the original project presents a significant challenge for both researchers and users aiming to replicate the research results. Therefore, we have provided a replication package for JSONSchemaDiscovery, enabling people to run the tool effortlessly on various setups and execute the evaluation steps necessay to replicate the results. Our package aims to validate the hypothesis that it can replicate an experiment detailed in the article, yielding identical results.
+
+\section{Package Overview}
+
+\subsection{Challenges in Replication}
+
+There are several challenges when attempting to replicate the research. Firstly, the original research has provided us a web application to facilitate extraction operations. However, as the application was built with node.js years ago, many dependencies have become deprecated. When attempting to build the application without any modification, it typically results in an error. Secondly, the datasets required for evaluation are difficult to find, and some of them need preprocessing before they can be used. Additionally, due to the dependency on a database, it is necessary to connect the web app with the database when launching the app, and data also needs to be loaded into the database before performing the evaluation.
+
+\subsection{Package Components}
+
+To tackle these challenges, the replication package includes a series of components.
+
+Initially, some patches are included to lock the versions of node packages for the web application and suppress build errors stemming from deprecated dependencies.
+
+The Docker recipe is structured into seperate stages, enabling independent building and caching. The build stage involves checking out the repository, applying patches, and installing the project, while the dependencies stage pulls remote dependencies such as datasets and report repository. The deploy stage installs dependencies for running the experiment script and building the LaTeX report, and organizes the working directory. Useful results are copied from previous stages, with the final image containing only necessary runtime dependencies, disregarding intermediate results to minimize the image size.
+
+Docker Compose is utilized to deploy both the app and MongoDB servers, creating an enviroment that bridges the database and client, including containers for MongoDB and the app. Users operate within the app container, while the MongoDB container houses data for the JSON schema extraction tool and test datasets.
+
+The doAll script comprises a series of operations aimed at ensuring a reproducible evaluation process. Initially, datasets are loaded into the database, followed by the assignment of extraction tasks through a sequence of requests to the web server. Subsequently, a schema and related metadata are outputted and included in the report building process. This allows for verification of the results against expectations.
+
+\section{Evaluation}
+
+\subsection{Evaluation Criteria}
+
+The original research conducted evaluations on different datasets to ensure the accuracy of the tool. Among these datasets is the DBPedia dataset used in the work of Wang et al.\cite{schemamanagement}, serving as a benchmark for comparison.
+
+In our case, the evaluation will be performed using the same DBPedia datasets to assess the package’s ability to replicate. These datasets contain multiple JSON files, with each file containing a list of JSON objects. The evaluation aims to count the number of extracted raw schemas with ordered and unordered structures.
+
+A successful replication would yield a table mirroring \autoref{tab:results1} presented in the original research.
+
+\begin{table}[hb]% h asks to places the floating element [h]ere.
+	\centering
+	\caption{Comparison with Wang et al.}
+	\label{tab:results1}
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		\multicolumn{2}{|c|}{Datasets} & \multicolumn{2}{c|}{JSON Schema Discovery} & Wang et al.                 \\
+		\hline
+		Collection                     & N\_JSON                                    & RS          & ROrd  & FS    \\
+		\hline
+		drugs                          & 3662                                       & 2818        & 2818  & 2818  \\
+		\hline
+		companies                      & 24367                                      & 21312       & 21312 & 21302 \\
+		\hline
+		movies                         & 30330                                      & 25140       & 25140 & 25137 \\
+		\hline
+	\end{tabular}
+	\parbox{0.4\textwidth}{
+		\raggedright\footnotesize
+		N\_JSON - Number of JSON documents. RS - Raw schemas \newline
+		ROrd - Raw schemas with ordered structure. FS - Final schemas.
+	}
+\end{table}
+
+\subsection{Evaluation Results}
+
+In order to replicate the research results, one simply needs to execute the doAll script within the container after launching the servers using Docker Compose. Upon executing the script within the container, the experimental results are shown in \autoref{tab:results2}. For each dataset, we consistently obtain the same result, confirming the system’s functional consistency.
+
+\begin{table}[hb]% h asks to places the floating element [h]ere.
+	\centering
+	\caption{Replication Results}
+	\label{tab:results2}
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\multicolumn{2}{|c|}{Datasets} & \multicolumn{2}{c|}{JSON Schema Discovery} \\
+		\hline
+		Collection                     & N\_JSON                                    & RS          & ROrd  \\
+		\hline
+		drugs                          & \drugsCount                                       & \drugsUnordered        & \drugsOrdered  \\
+		\hline
+		companies                      & \companiesCount                                      & \companiesUnordered       & \companiesOrdered \\
+		\hline
+		movies                         & \moviesCount                                      & \moviesUnordered       & \moviesOrdered  \\
+		\hline
+	\end{tabular}
+	\parbox{0.4\textwidth}{
+		\raggedright\footnotesize
+		N\_JSON - Number of JSON documents. RS - Raw schemas \newline
+		ROrd - Raw schemas with ordered structure. FS - Final schemas.
+	}
+\end{table}
+
+\section{Conclusion}
+
+From the evaluation of the package, we can confirm that a same result can be replicated, leading to confirmation of the hypothesis of the package: it can replicate an experiment detailed in the article, yielding consistent outcomes.
+
+While the experiment was conducted solely on one dataset, the package’s replicative capability has been validated. Not reliant on any specfic setup, the package consistently produces identical results across various architectures, leading us to confidently assert its success as a replication tool.
+
+%\clearpage
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{main}
+
+\end{document}
+\endinput
