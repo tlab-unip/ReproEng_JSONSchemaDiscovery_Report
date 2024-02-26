@@ -28,44 +28,62 @@
 \ifdefempty{\vldbavailabilityurl}{}{
 	\vspace{.3cm}
 	\begingroup\small\noindent\raggedright\textbf{Artifact Availability:}\\
-	The source code, data, and/or other artifacts have been made available at \url{https://github.com/tlab-unip/ReproEng_JSONSchemaDiscovery}.
+	The source code, data, and/or other artifacts have been made available at \url{https://doi.org/10.5281/zenodo.10709946}.
 	\endgroup
 }
 %%% VLDB block end %%%
 
 \section{Introduction}
 
-In 2018, JSONSchemaDiscovery\cite{jsonschema} introduced a method for extracting schemas from JSON or extended JSON documents stored in a NoSQL document-oriented database or other document repository.
+In 2018, the method known as JSONSchemaDiscovery\cite{jsonschema} was introduced, aimed at facilitating the extraction of schemas from JSON or extended JSON documents that are stored in a NoSQL document-oriented database or any other document repository. This method represents a significant advancement in the field of data management and schema extraction, catering to the evolving needs of handling unstructured or semi-structured data in modern database systems.
 
-Undoubtedly, this research has provided us an excellent tool for JSON Schema extraction. Nevertheless, due to limitations in previous scientific tools, the structure of the original project presents a significant challenge for both researchers and users aiming to replicate the research results. Therefore, we have provided a replication package for JSONSchemaDiscovery, enabling people to run the tool effortlessly on various setups and execute the evaluation steps necessay to replicate the results. Our package aims to validate the hypothesis that it can replicate an experiment detailed in the article, yielding identical results.
+The research conducted has undeniably provided us a valuable tool for the extraction of JSON Schemas. However, it is important to acknowledge that, despite its utility, the initial structure and implementation of the original project posed certain challenges. These challenges were particularly evident for researchers and users who sought to replicate the research results. The complexities inherent in the original tool's design and operation made replication efforts cumbersome, highlighting a gap in accessibility and ease of use.
+
+In response to these challenges, a replication package for JSONSchemaDiscovery has been developed. This package is designed to streamline the process of running the tool across various computing environments, thereby simplifying the execution of evaluation steps necessary for replicating the original research results.
+
+The primary objective of this replication package is to validate the hypothesis that it is possible to replicate an experiment, as detailed in the original article, and achieve identical results. By doing so, the package aims to enhance the accessibility of JSONSchemaDiscovery, making it more user-friendly and facilitating broader adoption and application in research and practical scenarios.
 
 \section{Package Overview}
 
 \subsection{Challenges in Replication}
 
-There are several challenges when attempting to replicate the research. Firstly, the original research has provided us a web application to facilitate extraction operations. However, as the application was built with node.js years ago, many dependencies have become deprecated. When attempting to build the application without any modification, it typically results in an error. Secondly, the datasets required for evaluation are difficult to find, and some of them need preprocessing before they can be used. Additionally, due to the dependency on a database, it is necessary to connect the web app with the database when launching the app, and data also needs to be loaded into the database before performing the evaluation.
+Replicating the research poses several challenges that need to be addressed meticulously. 
+
+\subsubsection{Node Dependencies}
+
+One of the primary challenges is the web application provided by the original research for facilitating extraction operations. This application, developed using node.js several years ago, now faces issues with many of its dependencies becoming deprecated. Attempting to build the application in its original form typically leads to errors, hindering the replication process. 
+
+\subsubsection{Database Connection}
+
+Another significant challenge is the accessibility and readiness of the datasets required for evaluation. These datasets are not only difficult to locate but some also require preprocessing to be usable for the intended purpose. Furthermore, the replication effort is complicated by the necessity of integrating the web application with a database. This integration is crucial for launching the application and for loading data into the database prior to performing any evaluation.
 
 \subsection{Package Components}
 
-To tackle these challenges, the replication package includes a series of components.
+To address these challenges, the replication package is equipped with a comprehensive set of components designed to facilitate a smoother replication process.
 
-Initially, some patches are included to lock the versions of node packages for the web application and suppress build errors stemming from deprecated dependencies.
+\subsubsection{Patches}
 
-The Docker recipe is structured into seperate stages, enabling independent building and caching. The build stage involves checking out the repository, applying patches, and installing the project, while the dependencies stage pulls remote dependencies such as datasets and report repository. The deploy stage installs dependencies for running the experiment script and building the LaTeX report, and organizes the working directory. Useful results are copied from previous stages, with the final image containing only necessary runtime dependencies, disregarding intermediate results to minimize the image size.
+The package initially includes patches that are specifically designed to fix the versioning of node packages used by the web application, thereby mitigating build errors caused by deprecated dependencies.
 
-Docker Compose is utilized to deploy both the app and MongoDB servers, creating an enviroment that bridges the database and client, including containers for MongoDB and the app. Users operate within the app container, while the MongoDB container houses data for the JSON schema extraction tool and test datasets.
+\subsubsection{Docker Recipe}
 
-The doAll script comprises a series of operations aimed at ensuring a reproducible evaluation process. Initially, datasets are loaded into the database, followed by the assignment of extraction tasks through a sequence of requests to the web server. Subsequently, a schema and related metadata are outputted and included in the report building process. This allows for verification of the results against expectations.
+A Docker recipe is provided, which is structured into separate stages. This structuring allows for independent building and caching of each stage. The build stage encompasses checking out the repository, applying necessary patches, and installing the project. The dependencies stage is responsible for pulling in remote dependencies, such as datasets and the report repository. During the deploy stage, dependencies required for running the experiment script and building the LaTeX report are installed. This stage also organizes the working directory in a manner that ensures useful results from previous stages are retained, while the final image is optimized to contain only the essential runtime dependencies, thereby reducing the image size.
+
+\subsubsection{Docker Compose}
+
+Docker Compose is employed to deploy both the application and MongoDB servers, thereby creating an environment that seamlessly connects the database with the client. This setup includes containers for both MongoDB and the application, with the former housing the data necessary for the JSON schema extraction tool and the test datasets, and the latter facilitating user operations within the app.
+
+\subsubsection{Experiment Script}
+
+The package also includes a doAll script, which is a comprehensive series of operations designed to ensure the evaluation process can be replicated reliably. This script begins with loading the datasets into the database. It then proceeds to assign extraction tasks to the web server through a series of requests. Following the extraction tasks, a schema along with related metadata is generated and incorporated into the report building process. This meticulous approach allows for the verification of the results against the expected outcomes, ensuring the reliability and accuracy of the replication process.
 
 \section{Evaluation}
 
 \subsection{Evaluation Criteria}
 
-The original research conducted evaluations on different datasets to ensure the accuracy of the tool. Among these datasets is the DBPedia dataset used in the work of Wang et al.\cite{schemamanagement}, serving as a benchmark for comparison.
+The original research diligently evaluated the tool's accuracy using various datasets, ensuring a robust assessment framework. A notable dataset employed for benchmarking purposes was the DBPedia dataset, as referenced in the work by Wang et al.\cite{schemamanagement}. These datasets, comprising multiple JSON files, each containing a list of JSON objects, provided a rich and comprehensive foundation for comparison and thorough evaluation.
 
-In our case, the evaluation will be performed using the same DBPedia datasets to assess the package’s ability to replicate. These datasets contain multiple JSON files, with each file containing a list of JSON objects. The evaluation aims to count the number of extracted raw schemas with ordered and unordered structures.
-
-A successful replication would yield a table mirroring \autoref{tab:results1} presented in the original research.
+The data extracted from the original article is presented in a table format as shown in \autoref{tab:results1}, offering a clear statistical overview of different datasets. Each row in the table provides specific statistical insights into individual datasets, while each column details the number of schemas extracted. This structured comparison method effectively highlights the performance of the JSON schema discovery tool against the methodology proposed by Wang et al., showcasing the tool's efficiency in a clear and measurable way.
 
 \begin{table}[hb]% h asks to places the floating element [h]ere.
 	\centering
@@ -91,9 +109,17 @@ A successful replication would yield a table mirroring \autoref{tab:results1} pr
 	}
 \end{table}
 
+For our evaluation, we will employ the same DBPedia datasets to assess the replication package's ability to accurately reproduce results. The focus of this evaluation is to count the number of raw schemas extracted, taking into account both ordered and unordered structures.
+
+Achieving a result that closely mirrors the table from the original research would confirm the replication package's effectiveness and the reliability of its performance in replicating the tool's functionality.
+
 \subsection{Evaluation Results}
 
-In order to replicate the research results, one simply needs to execute the doAll script within the container after launching the servers using Docker Compose. Upon executing the script within the container, the experimental results are shown in \autoref{tab:results2}. For each dataset, we consistently obtain the same result, confirming the system’s functional consistency.
+The replication package features a script designed for automating the execution of experiments and the generation of reports. To replicate the findings of the original research, one needs to run the doAll script within the container, following the initiation of the servers via Docker Compose. 
+
+Conducted on a host machine equipped with an i5-9300H CPU and 32 GB memory, the experiment takes place within containers launched in WSL2. The execution of this script within the container leads to the experimental results being systematically displayed in the subsequent \autoref{tab:results2}. 
+
+It is important to highlight that the results for each dataset were consistent, reinforcing the system's reliability and functional consistency. This consistency is crucial for validating the replication process, as it demonstrates the package's capability to reliably reproduce the original research outcomes, thereby affirming the tool's replicative accuracy and operational stability.
 
 \begin{table}[hb]% h asks to places the floating element [h]ere.
 	\centering
@@ -121,9 +147,9 @@ In order to replicate the research results, one simply needs to execute the doAl
 
 \section{Conclusion}
 
-From the evaluation of the package, we can confirm that a same result can be replicated, leading to confirmation of the hypothesis of the package: it can replicate an experiment detailed in the article, yielding consistent outcomes.
+Upon thorough evaluation of the package, it has been determined that the ability to replicate a specific result, as outlined in the original article, has been successfully achieved. This leads to the validation of the package's foundational hypothesis: it possesses the capability to accurately replicate an experiment detailed within the article, consistently producing the same outcomes.
 
-While the experiment was conducted solely on one dataset, the package’s replicative capability has been validated. Not reliant on any specfic setup, the package consistently produces identical results across various architectures, leading us to confidently assert its success as a replication tool.
+It is important to note that the evaluation was conducted using a single dataset. Despite this limitation, the evidence gathered from the evaluation process sufficiently validates the package's replicative capabilities. Not reliant on any specfic setup, the package consistently produces identical results across various architectures, leading us to confidently assert its success as a replication tool.
 
 %\clearpage
 
